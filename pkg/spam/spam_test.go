@@ -3,7 +3,7 @@ package spam
 import (
 	"testing"
 
-	"github.com/nostr-mail/second-go/pkg/mail"
+	"github.com/nostr-mail/nostr-mail-go/pkg/mail"
 )
 
 const (

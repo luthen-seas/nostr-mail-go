@@ -12,7 +12,7 @@ go get github.com/nostr-mail/nostr-mail-go
 
 | Package | Purpose |
 |---------|---------|
-| `pkg/mail` | Kind 15 event creation and parsing |
+| `pkg/mail` | Kind 1111 event creation and parsing |
 | `pkg/wrap` | NIP-59 seal + gift wrap (send/receive) |
 | `pkg/thread` | Thread tree reconstruction |
 | `pkg/spam` | Anti-spam tier evaluation |

@@ -1,4 +1,4 @@
-module github.com/nostr-mail/second-go
+module github.com/nostr-mail/nostr-mail-go
 
 go 1.22
 

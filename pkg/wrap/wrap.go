@@ -1,7 +1,7 @@
 // Package wrap implements NIP-59 seal and gift-wrap encryption for NOSTR Mail.
 //
 // The three-layer encryption model is:
-//  1. Rumor (kind 15) — unsigned mail content
+//  1. Rumor (kind 1111) — unsigned mail content
 //  2. Seal (kind 13) — NIP-44 encrypt rumor with ECDH(sender, recipient),
 //     signed by sender, randomized timestamp, empty tags
 //  3. Gift Wrap (kind 1059) — NIP-44 encrypt seal with ECDH(ephemeral, recipient),
@@ -18,7 +18,7 @@ import (
 	"github.com/nbd-wtf/go-nostr"
 	"github.com/nbd-wtf/go-nostr/nip44"
 
-	"github.com/nostr-mail/second-go/pkg/mail"
+	"github.com/nostr-mail/nostr-mail-go/pkg/mail"
 )
 
 // maxTimestampJitter is the maximum random offset applied to seal and wrap

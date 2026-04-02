@@ -15,7 +15,7 @@ package spam
 import (
 	"fmt"
 
-	"github.com/nostr-mail/second-go/pkg/mail"
+	"github.com/nostr-mail/nostr-mail-go/pkg/mail"
 )
 
 // SpamTier holds the classification result for an incoming message.
@@ -100,8 +100,8 @@ func EvaluateTier(
 		}
 	}
 
-	// Tier 3: Cashu payment.
-	if postage != nil && postage.Amount >= policy.CashuMinSats && policy.CashuMinSats > 0 {
+	// Tier 3: Cashu payment (must be P2PK locked).
+	if postage != nil && postage.P2PK && postage.Amount >= policy.CashuMinSats && policy.CashuMinSats > 0 {
 		// If accepted mints are specified, verify the token's mint is trusted.
 		mintAccepted := len(policy.AcceptedMints) == 0 // no restrictions means all accepted
 		if !mintAccepted && postage.Mint != "" {

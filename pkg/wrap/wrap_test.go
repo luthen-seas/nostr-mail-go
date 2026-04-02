@@ -6,7 +6,7 @@ import (
 
 	"github.com/nbd-wtf/go-nostr"
 
-	"github.com/nostr-mail/second-go/pkg/mail"
+	"github.com/nostr-mail/nostr-mail-go/pkg/mail"
 )
 
 // Test keys: Alice and Bob are from the NIP-59 test vectors (known valid keypairs).
@@ -91,7 +91,7 @@ func TestWrapUnwrap_RoundTrip(t *testing.T) {
 	}
 
 	// Verify rumor content survived the round-trip
-	if recovered.Kind != 15 {
+	if recovered.Kind != 1111 {
 		t.Errorf("recovered kind should be 15, got %d", recovered.Kind)
 	}
 	if recovered.PubKey != alicePub {

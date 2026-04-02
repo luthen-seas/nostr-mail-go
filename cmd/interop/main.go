@@ -13,11 +13,11 @@ import (
 
 	"github.com/nbd-wtf/go-nostr"
 
-	"github.com/nostr-mail/second-go/pkg/mail"
-	"github.com/nostr-mail/second-go/pkg/spam"
-	"github.com/nostr-mail/second-go/pkg/state"
-	"github.com/nostr-mail/second-go/pkg/thread"
-	"github.com/nostr-mail/second-go/pkg/wrap"
+	"github.com/nostr-mail/nostr-mail-go/pkg/mail"
+	"github.com/nostr-mail/nostr-mail-go/pkg/spam"
+	"github.com/nostr-mail/nostr-mail-go/pkg/state"
+	"github.com/nostr-mail/nostr-mail-go/pkg/thread"
+	"github.com/nostr-mail/nostr-mail-go/pkg/wrap"
 )
 
 // TestResult represents one interop test result.
