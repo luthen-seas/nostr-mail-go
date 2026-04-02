@@ -45,7 +45,7 @@ func generateEphemeralKey() string {
 // nip44Encrypt encrypts plaintext using NIP-44 with the shared secret derived
 // from the sender's private key and recipient's public key.
 func nip44Encrypt(plaintext string, senderPrivKey string, recipientPubKey string) (string, error) {
-	sharedKey, err := nip44.GenerateConversationKey(senderPrivKey, recipientPubKey)
+	sharedKey, err := nip44.GenerateConversationKey(recipientPubKey, senderPrivKey)
 	if err != nil {
 		return "", fmt.Errorf("generating conversation key: %w", err)
 	}
@@ -59,7 +59,7 @@ func nip44Encrypt(plaintext string, senderPrivKey string, recipientPubKey string
 // nip44Decrypt decrypts NIP-44 ciphertext using the shared secret derived from
 // the recipient's private key and sender's public key.
 func nip44Decrypt(ciphertext string, recipientPrivKey string, senderPubKey string) (string, error) {
-	sharedKey, err := nip44.GenerateConversationKey(recipientPrivKey, senderPubKey)
+	sharedKey, err := nip44.GenerateConversationKey(senderPubKey, recipientPrivKey)
 	if err != nil {
 		return "", fmt.Errorf("generating conversation key: %w", err)
 	}

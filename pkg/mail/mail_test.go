@@ -19,7 +19,7 @@ func TestCreateRumor_SimpleMessage(t *testing.T) {
 		CreatedAt:    1711843200,
 	})
 
-	if r.Kind != 1111 {
+	if r.Kind != 1400 {
 		t.Errorf("expected kind 1400, got %d", r.Kind)
 	}
 	if r.PubKey != alicePub {
@@ -72,7 +72,7 @@ func TestCreateRumor_CCRecipients(t *testing.T) {
 		CreatedAt: 1711843200,
 	})
 
-	if r.Kind != 1111 {
+	if r.Kind != 1400 {
 		t.Errorf("expected kind 1400, got %d", r.Kind)
 	}
 
