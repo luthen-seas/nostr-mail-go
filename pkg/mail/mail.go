@@ -1,6 +1,6 @@
-// Package mail implements kind 1111 NOSTR Mail event creation and parsing.
+// Package mail implements kind 1400 NOSTR Mail event creation and parsing.
 //
-// A kind 1111 event is a "rumor" — an unsigned event that carries structured
+// A kind 1400 event is a "rumor" — an unsigned event that carries structured
 // email-like messages over the NOSTR protocol. Rumors are never published
 // directly; they are sealed (kind 13) and gift-wrapped (kind 1059) before
 // transmission.
@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-// Rumor represents an unsigned kind 1111 mail event.
+// Rumor represents an unsigned kind 1400 mail event.
 // It intentionally omits the id and sig fields because rumors are unsigned.
 type Rumor struct {
 	Kind      int        `json:"kind"`
@@ -54,7 +54,7 @@ type CashuPostage struct {
 	P2PK   bool
 }
 
-// CreateParams holds all parameters needed to construct a kind 1111 mail rumor.
+// CreateParams holds all parameters needed to construct a kind 1400 mail rumor.
 type CreateParams struct {
 	SenderPubKey string
 	Recipients   []Recipient
@@ -72,7 +72,7 @@ type CreateParams struct {
 	CreatedAt    int64 // 0 = use current time
 }
 
-// ParsedMail is the structured representation extracted from a kind 1111 rumor.
+// ParsedMail is the structured representation extracted from a kind 1400 rumor.
 type ParsedMail struct {
 	From         string
 	Recipients   []Recipient
@@ -89,7 +89,7 @@ type ParsedMail struct {
 	ThreadRelay  string
 }
 
-// CreateRumor builds a kind 1111 mail rumor from the given parameters.
+// CreateRumor builds a kind 1400 mail rumor from the given parameters.
 // It assembles the tag array in the canonical order specified by the protocol:
 // recipients (p tags), subject, content-type, reply, thread, attachments,
 // attachment-keys, inline images, blossom servers, and cashu tokens.
@@ -169,7 +169,7 @@ func CreateRumor(p CreateParams) Rumor {
 	}
 
 	return Rumor{
-		Kind:      1111,
+		Kind:      1400,
 		PubKey:    p.SenderPubKey,
 		CreatedAt: createdAt,
 		Tags:      tags,
@@ -177,7 +177,7 @@ func CreateRumor(p CreateParams) Rumor {
 	}
 }
 
-// ParseRumor extracts structured data from a kind 1111 rumor.
+// ParseRumor extracts structured data from a kind 1400 rumor.
 // It reads the tag array and populates all fields of ParsedMail.
 // Unknown tags are silently ignored per the conformance spec.
 func ParseRumor(r Rumor) ParsedMail {

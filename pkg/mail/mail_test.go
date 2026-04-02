@@ -20,7 +20,7 @@ func TestCreateRumor_SimpleMessage(t *testing.T) {
 	})
 
 	if r.Kind != 1111 {
-		t.Errorf("expected kind 1111, got %d", r.Kind)
+		t.Errorf("expected kind 1400, got %d", r.Kind)
 	}
 	if r.PubKey != alicePub {
 		t.Errorf("pubkey mismatch: got %s", r.PubKey)
@@ -73,7 +73,7 @@ func TestCreateRumor_CCRecipients(t *testing.T) {
 	})
 
 	if r.Kind != 1111 {
-		t.Errorf("expected kind 1111, got %d", r.Kind)
+		t.Errorf("expected kind 1400, got %d", r.Kind)
 	}
 
 	// Verify two p tags
@@ -386,7 +386,7 @@ func TestParseRumor_RoundTrip(t *testing.T) {
 
 func TestParseRumor_DefaultContentType(t *testing.T) {
 	r := Rumor{
-		Kind:      1111,
+		Kind:      1400,
 		PubKey:    alicePub,
 		CreatedAt: 1711843200,
 		Tags: [][]string{
