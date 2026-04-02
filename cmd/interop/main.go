@@ -428,8 +428,6 @@ func testSpamTiers() []TestResult {
 
 	policy := spam.Policy{
 		ContactsFree:  true,
-		NIP05Free:     true,
-		POWMinBits:    20,
 		CashuMinSats:  10,
 		AcceptedMints: []string{"https://mint.example.com"},
 		UnknownAction: "quarantine",
@@ -458,8 +456,6 @@ func runSpamVector(id, name string, input, expected map[string]interface{}, poli
 	result := TestResult{ID: id, Name: name, Category: "spam"}
 
 	senderPubKey := getString(input, "sender_pubkey")
-	nip05Verified := getBool(input, "sender_nip05_verified")
-	powBits := int(getFloat64(input, "pow_bits"))
 	inContacts := getBool(input, "sender_in_contacts")
 
 	// Build effective contacts
@@ -476,15 +472,20 @@ func runSpamVector(id, name string, input, expected map[string]interface{}, poli
 	if token := getString(input, "cashu_token"); token != "" {
 		amount := getInt64(input, "cashu_amount_sats")
 		mint := getString(input, "cashu_mint")
+		p2pk := getBool(input, "cashu_p2pk")
+		// Default to true for backward compat with vectors that don't specify
+		if _, ok := input["cashu_p2pk"]; !ok {
+			p2pk = true
+		}
 		postage = &mail.CashuPostage{
 			Token:  token,
 			Mint:   mint,
 			Amount: amount,
-			P2PK:   true,
+			P2PK:   p2pk,
 		}
 	}
 
-	tier := spam.EvaluateTier(senderPubKey, contacts, nip05Verified, powBits, postage, policy)
+	tier := spam.EvaluateTier(senderPubKey, contacts, postage, policy)
 
 	var failures []string
 
