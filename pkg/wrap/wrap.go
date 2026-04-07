@@ -208,6 +208,11 @@ func UnwrapMail(wrapEvent *nostr.Event, recipientPrivKey string) (*mail.Rumor, s
 		return nil, senderPubKey, sigValid, fmt.Errorf("parsing rumor JSON: %w", err)
 	}
 
+	// Step 5: Verify sender consistency (rumor.pubkey must match seal.pubkey).
+	if rumor.PubKey != senderPubKey {
+		return nil, senderPubKey, sigValid, fmt.Errorf("sender mismatch: rumor pubkey %s != seal pubkey %s", rumor.PubKey, senderPubKey)
+	}
+
 	return &rumor, senderPubKey, sigValid, nil
 }
 

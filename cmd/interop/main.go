@@ -551,7 +551,7 @@ func testMailboxState() []TestResult {
 		s.MoveToFolder("ev2", "Work")
 		s.MarkDeleted("ev3")
 
-		tags := s.ToTags()
+		tags := s.ToTags("2026-04")
 		restored := state.FromTags(tags)
 
 		if restored.IsRead("ev1") && restored.IsRead("ev2") &&

@@ -7,6 +7,8 @@
 package mail
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"strconv"
 	"time"
@@ -57,6 +59,7 @@ type CashuPostage struct {
 // CreateParams holds all parameters needed to construct a kind 1400 mail rumor.
 type CreateParams struct {
 	SenderPubKey string
+	MessageID    string // Stable identity (32-byte hex). Auto-generated if empty.
 	Recipients   []Recipient
 	Subject      string
 	Body         string
@@ -75,6 +78,7 @@ type CreateParams struct {
 // ParsedMail is the structured representation extracted from a kind 1400 rumor.
 type ParsedMail struct {
 	From         string
+	MessageID    string
 	Recipients   []Recipient
 	Subject      string
 	Body         string
@@ -115,6 +119,17 @@ func CreateRumor(p CreateParams) Rumor {
 	if p.Subject != "" {
 		tags = append(tags, []string{"subject", p.Subject})
 	}
+
+	// Message ID — stable identity shared across all recipients (CSPRNG)
+	messageID := p.MessageID
+	if messageID == "" {
+		buf := make([]byte, 32)
+		if _, err := rand.Read(buf); err != nil {
+			panic("CSPRNG failure: " + err.Error())
+		}
+		messageID = hex.EncodeToString(buf)
+	}
+	tags = append(tags, []string{"message-id", messageID})
 
 	// Content-type tag (omit if text/plain or empty, which defaults to text/plain)
 	if p.ContentType != "" && p.ContentType != "text/plain" {
@@ -214,6 +229,10 @@ func ParseRumor(r Rumor) ParsedMail {
 		case "subject":
 			if len(tag) >= 2 {
 				m.Subject = tag[1]
+			}
+		case "message-id":
+			if len(tag) >= 2 {
+				m.MessageID = tag[1]
 			}
 		case "content-type":
 			if len(tag) >= 2 {

@@ -207,7 +207,7 @@ func TestSerializationRoundTrip(t *testing.T) {
 	s.MarkDeleted(idC)
 
 	// Serialize to tags
-	tags := s.ToTags()
+	tags := s.ToTags("2026-04")
 
 	// Deserialize back
 	restored := FromTags(tags)

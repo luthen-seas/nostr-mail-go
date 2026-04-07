@@ -12,9 +12,10 @@ import "sort"
 // thread reconstruction.
 type Message struct {
 	ID        string
+	MessageID string // Stable identity from message-id tag (used for threading)
 	PubKey    string
-	ReplyTo   string // parent event ID from the "reply" tag; empty if root
-	ThreadID  string // root event ID from the "thread" tag; empty if root
+	ReplyTo   string // parent message-id from the "reply" tag; empty if root
+	ThreadID  string // root message-id from the "thread" tag; empty if root
 	CreatedAt int64
 	Subject   string
 	Content   string
@@ -40,10 +41,14 @@ type ThreadNode struct {
 // Returns a slice of root nodes. Orphaned messages (whose parent is unknown)
 // appear as separate roots.
 func BuildThread(messages []Message) []*ThreadNode {
-	// Step 1: Create a node for each message and index by ID.
+	// Step 1: Create a node for each message, indexed by message-id.
 	nodeIndex := make(map[string]*ThreadNode, len(messages))
 	for i := range messages {
-		nodeIndex[messages[i].ID] = &ThreadNode{
+		key := messages[i].MessageID
+		if key == "" {
+			key = messages[i].ID // fallback for messages without message-id
+		}
+		nodeIndex[key] = &ThreadNode{
 			Message: messages[i],
 		}
 	}

@@ -1,4 +1,4 @@
-// Package state implements the NOSTR Mail mailbox state (kind 10099) using
+// Package state implements the NOSTR Mail mailbox state (kind 30099) using
 // CRDT-based conflict resolution for multi-device sync.
 //
 // The state model uses:
@@ -170,18 +170,18 @@ func Merge(a, b *MailboxState) *MailboxState {
 	return result
 }
 
-// ToTags serializes the mailbox state to kind 10099 event tags.
+// ToTags serializes the mailbox state to kind 30099 event tags.
 // The output format follows the NOSTR Mail specification:
-//   - ["d", "mailbox-state"] — required d-tag for addressable events
-//   - ["read", eventId, timestamp] — one per read message
-//   - ["flagged", eventId] — one per flagged message
-//   - ["folder", folderName, eventId] — one per folder assignment
-//   - ["deleted", eventId] — one per deleted message
-func (s *MailboxState) ToTags() [][]string {
+//   - ["d", "YYYY-MM"] — required d-tag for monthly partition
+//   - ["read", messageId, timestamp] — one per read message
+//   - ["flagged", messageId] — one per flagged message
+//   - ["folder", folderName, messageId] — one per folder assignment
+//   - ["deleted", messageId] — one per deleted message
+func (s *MailboxState) ToTags(partition string) [][]string {
 	var tags [][]string
 
-	// d-tag for addressable event (kind 10099 is in the replaceable range).
-	tags = append(tags, []string{"d", "mailbox-state"})
+	// d-tag for addressable event (kind 30099, monthly partition).
+	tags = append(tags, []string{"d", partition})
 
 	// Read tags (G-Set).
 	for id, ts := range s.Reads {
@@ -210,8 +210,8 @@ func (s *MailboxState) ToTags() [][]string {
 	return tags
 }
 
-// FromTags deserializes kind 10099 event tags into a MailboxState.
-// Unknown tags are silently ignored.
+// FromTags deserializes kind 30099 event tags into a MailboxState.
+// The d-tag (partition) is ignored. Unknown tags are silently ignored.
 func FromTags(tags [][]string) *MailboxState {
 	s := New()
 
