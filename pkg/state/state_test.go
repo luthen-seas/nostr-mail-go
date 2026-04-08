@@ -1,6 +1,7 @@
 package state
 
 import (
+	"encoding/json"
 	"testing"
 )
 
@@ -12,7 +13,7 @@ const (
 
 func TestMarkRead_Append(t *testing.T) {
 	s := New()
-	s.MarkRead(idA, "1711840000")
+	s.MarkRead(idA)
 
 	if !s.IsRead(idA) {
 		t.Errorf("expected %s to be read", idA)
@@ -22,7 +23,7 @@ func TestMarkRead_Append(t *testing.T) {
 	}
 
 	// Add a second read
-	s.MarkRead(idB, "1711846800")
+	s.MarkRead(idB)
 	if !s.IsRead(idB) {
 		t.Errorf("expected %s to be read after adding", idB)
 	}
@@ -35,13 +36,9 @@ func TestMarkRead_Append(t *testing.T) {
 
 func TestMarkRead_Idempotent(t *testing.T) {
 	s := New()
-	s.MarkRead(idA, "1711840000")
-	s.MarkRead(idA, "1711846800") // second mark with different timestamp
+	s.MarkRead(idA)
+	s.MarkRead(idA) // second mark — idempotent
 
-	// G-Set idempotent: should keep the first timestamp
-	if s.Reads[idA] != "1711840000" {
-		t.Errorf("idempotent MarkRead should keep first timestamp, got %s", s.Reads[idA])
-	}
 	if len(s.Reads) != 1 {
 		t.Errorf("expected 1 read entry (idempotent), got %d", len(s.Reads))
 	}
@@ -50,7 +47,7 @@ func TestMarkRead_Idempotent(t *testing.T) {
 func TestMarkRead_CannotUnread(t *testing.T) {
 	// G-Set property: once read, cannot be un-read through normal operations.
 	s := New()
-	s.MarkRead(idA, "1711840000")
+	s.MarkRead(idA)
 
 	// There is no "unread" method because G-Set is grow-only.
 	// Verify the read persists.
@@ -63,36 +60,36 @@ func TestToggleFlag(t *testing.T) {
 	s := New()
 
 	// Initially not flagged
-	if s.HasFlag(idA, "flagged") {
-		t.Errorf("should not be flagged initially")
+	if s.HasFlag(idA, "starred") {
+		t.Errorf("should not be starred initially")
 	}
 
 	// Toggle on
-	s.ToggleFlag(idA, "flagged")
-	if !s.HasFlag(idA, "flagged") {
-		t.Errorf("should be flagged after toggle on")
+	s.ToggleFlag(idA, "starred")
+	if !s.HasFlag(idA, "starred") {
+		t.Errorf("should be starred after toggle on")
 	}
 
 	// Toggle off
-	s.ToggleFlag(idA, "flagged")
-	if s.HasFlag(idA, "flagged") {
-		t.Errorf("should not be flagged after toggle off")
+	s.ToggleFlag(idA, "starred")
+	if s.HasFlag(idA, "starred") {
+		t.Errorf("should not be starred after toggle off")
 	}
 }
 
 func TestSetFlag(t *testing.T) {
 	s := New()
-	s.SetFlag(idA, "flagged")
+	s.SetFlag(idA, "starred")
 
-	if !s.HasFlag(idA, "flagged") {
-		t.Errorf("expected flagged after SetFlag")
+	if !s.HasFlag(idA, "starred") {
+		t.Errorf("expected starred after SetFlag")
 	}
 
 	// SetFlag is idempotent
-	s.SetFlag(idA, "flagged")
+	s.SetFlag(idA, "starred")
 	count := 0
 	for _, f := range s.Flags[idA] {
-		if f == "flagged" {
+		if f == "starred" {
 			count++
 		}
 	}
@@ -124,12 +121,12 @@ func TestMoveToFolder(t *testing.T) {
 
 func TestMerge_GSetUnionReads(t *testing.T) {
 	a := New()
-	a.MarkRead(idA, "1711840000")
-	a.MarkRead(idB, "1711846800")
+	a.MarkRead(idA)
+	a.MarkRead(idB)
 
 	b := New()
-	b.MarkRead(idA, "1711840000")
-	b.MarkRead(idC, "1711850400")
+	b.MarkRead(idA)
+	b.MarkRead(idC)
 
 	merged := Merge(a, b)
 
@@ -151,16 +148,16 @@ func TestMerge_GSetUnionReads(t *testing.T) {
 func TestMerge_LWWFolders(t *testing.T) {
 	// Device 1 (older): moves A to "Work"
 	a := New()
-	a.MarkRead(idA, "1711840000")
-	a.MarkRead(idB, "1711846800")
-	a.MarkRead(idC, "1711850400")
+	a.MarkRead(idA)
+	a.MarkRead(idB)
+	a.MarkRead(idC)
 	a.MoveToFolder(idA, "Work")
 
 	// Device 2 (newer): moves A to "Personal", flags A
 	b := New()
-	b.MarkRead(idA, "1711840000")
-	b.MarkRead(idB, "1711846800")
-	b.SetFlag(idA, "flagged")
+	b.MarkRead(idA)
+	b.MarkRead(idB)
+	b.SetFlag(idA, "starred")
 	b.MoveToFolder(idA, "Personal")
 
 	// b is newer, so Merge(a, b) should use b's folder for conflicts
@@ -176,53 +173,52 @@ func TestMerge_LWWFolders(t *testing.T) {
 		t.Errorf("expected 3 reads after merge, got %d", len(merged.Reads))
 	}
 
-	// Flags: should have flagged from b
-	if !merged.HasFlag(idA, "flagged") {
-		t.Errorf("merged should have flagged from state b")
+	// Flags: should have starred from b
+	if !merged.HasFlag(idA, "starred") {
+		t.Errorf("merged should have starred from state b")
 	}
 }
 
 func TestMerge_FlagsUnion(t *testing.T) {
 	a := New()
-	a.SetFlag(idA, "flagged")
+	a.SetFlag(idA, "starred")
 
 	b := New()
-	// b does NOT have idA flagged
+	// b does NOT have idA starred
 
 	// When merging, flags from both states are union'd
 	merged := Merge(a, b)
 
 	// Since a has the flag and b doesn't, the union still contains it
-	if !merged.HasFlag(idA, "flagged") {
-		t.Errorf("merged flags should include 'flagged' from state a")
+	if !merged.HasFlag(idA, "starred") {
+		t.Errorf("merged flags should include 'starred' from state a")
 	}
 }
 
-func TestSerializationRoundTrip(t *testing.T) {
+// ── Encrypted payload serialization tests ───────────────────────────────────
+
+func TestPayloadRoundTrip(t *testing.T) {
 	s := New()
-	s.MarkRead(idA, "1711840000")
-	s.MarkRead(idB, "1711846800")
-	s.SetFlag(idA, "flagged")
+	s.MarkRead(idA)
+	s.MarkRead(idB)
+	s.SetFlag(idA, "starred")
 	s.MoveToFolder(idA, "Work")
 	s.MarkDeleted(idC)
 
-	// Serialize to tags
-	tags := s.ToTags("2026-04")
+	// Serialize to payload
+	payload := s.ToPayload()
 
 	// Deserialize back
-	restored := FromTags(tags)
+	restored := FromPayload(payload)
 
 	// Verify reads
 	if !restored.IsRead(idA) || !restored.IsRead(idB) {
 		t.Errorf("restored reads mismatch")
 	}
-	if restored.Reads[idA] != "1711840000" {
-		t.Errorf("restored read timestamp mismatch for A: got %s", restored.Reads[idA])
-	}
 
 	// Verify flags
-	if !restored.HasFlag(idA, "flagged") {
-		t.Errorf("restored should have A flagged")
+	if !restored.HasFlag(idA, "starred") {
+		t.Errorf("restored should have A starred")
 	}
 
 	// Verify folders
@@ -236,14 +232,137 @@ func TestSerializationRoundTrip(t *testing.T) {
 	}
 }
 
-func TestFromTags_ParsesTestVectorFormat(t *testing.T) {
-	// Simulate the tag format from the test vectors
+func TestPayloadJSONSchema(t *testing.T) {
+	s := New()
+	s.MarkRead(idA)
+	s.SetFlag(idA, "starred")
+	s.MoveToFolder(idB, "archive")
+	s.MarkDeleted(idC)
+
+	payload := s.ToPayload()
+	data, err := json.Marshal(payload)
+	if err != nil {
+		t.Fatalf("failed to marshal payload: %v", err)
+	}
+
+	// Verify it parses back to the same structure
+	var parsed StatePayload
+	if err := json.Unmarshal(data, &parsed); err != nil {
+		t.Fatalf("failed to unmarshal payload: %v", err)
+	}
+
+	if len(parsed.Read) != 1 || parsed.Read[0] != idA {
+		t.Errorf("expected read [%s], got %v", idA, parsed.Read)
+	}
+	if len(parsed.Flag[idA]) != 1 || parsed.Flag[idA][0] != "starred" {
+		t.Errorf("expected flag {%s: [starred]}, got %v", idA, parsed.Flag)
+	}
+	if parsed.Folder[idB] != "archive" {
+		t.Errorf("expected folder {%s: archive}, got %v", idB, parsed.Folder)
+	}
+	if len(parsed.Deleted) != 1 || parsed.Deleted[0] != idC {
+		t.Errorf("expected deleted [%s], got %v", idC, parsed.Deleted)
+	}
+}
+
+func TestSerializeState_DTagOnly(t *testing.T) {
+	s := New()
+	s.MarkRead(idA)
+
+	tags, content, err := s.SerializeState("2026-04")
+	if err != nil {
+		t.Fatalf("SerializeState failed: %v", err)
+	}
+
+	// Only the d-tag should be visible
+	if len(tags) != 1 {
+		t.Errorf("expected 1 tag (d-tag only), got %d", len(tags))
+	}
+	if tags[0][0] != "d" || tags[0][1] != "2026-04" {
+		t.Errorf("expected d-tag [d, 2026-04], got %v", tags[0])
+	}
+
+	// Content should be valid JSON
+	var payload StatePayload
+	if err := json.Unmarshal([]byte(content), &payload); err != nil {
+		t.Fatalf("content is not valid JSON: %v", err)
+	}
+	if len(payload.Read) != 1 || payload.Read[0] != idA {
+		t.Errorf("payload read mismatch")
+	}
+}
+
+func TestDeserializeState_RoundTrip(t *testing.T) {
+	s := New()
+	s.MarkRead(idA)
+	s.MarkRead(idB)
+	s.SetFlag(idA, "starred")
+	s.MoveToFolder(idB, "archive")
+	s.MarkDeleted(idC)
+
+	_, content, err := s.SerializeState("2026-04")
+	if err != nil {
+		t.Fatalf("SerializeState failed: %v", err)
+	}
+
+	restored, err := DeserializeState(content)
+	if err != nil {
+		t.Fatalf("DeserializeState failed: %v", err)
+	}
+
+	if !restored.IsRead(idA) || !restored.IsRead(idB) {
+		t.Errorf("restored reads mismatch")
+	}
+	if !restored.HasFlag(idA, "starred") {
+		t.Errorf("restored should have A starred")
+	}
+	if restored.GetFolder(idB) != "archive" {
+		t.Errorf("restored folder mismatch")
+	}
+	if !restored.IsDeleted(idC) {
+		t.Errorf("restored should have C deleted")
+	}
+}
+
+// ── Legacy tag tests ────────────────────────────────────────────────────────
+
+func TestLegacyTagsRoundTrip(t *testing.T) {
+	s := New()
+	s.MarkRead(idA)
+	s.MarkRead(idB)
+	s.SetFlag(idA, "starred")
+	s.MoveToFolder(idA, "Work")
+	s.MarkDeleted(idC)
+
+	// Serialize to legacy tags
+	tags := s.ToTags("2026-04")
+
+	// Deserialize back
+	restored := FromTags(tags)
+
+	if !restored.IsRead(idA) || !restored.IsRead(idB) {
+		t.Errorf("restored reads mismatch")
+	}
+	if !restored.HasFlag(idA, "starred") {
+		t.Errorf("restored should have A starred")
+	}
+	if restored.GetFolder(idA) != "Work" {
+		t.Errorf("restored folder for A should be 'Work', got %s", restored.GetFolder(idA))
+	}
+	if !restored.IsDeleted(idC) {
+		t.Errorf("restored should have C deleted")
+	}
+}
+
+func TestFromTags_ParsesSpecFormat(t *testing.T) {
+	// Tag format per NIP spec: ["flag", messageId, flag1, flag2, ...]
+	// ["folder", messageId, folderName]
 	tags := [][]string{
-		{"d", "mailbox-state"},
-		{"read", idA, "1711840000"},
-		{"read", idB, "1711846800"},
-		{"flagged", idA},
-		{"folder", "Work", idA},
+		{"d", "2026-04"},
+		{"read", idA},
+		{"read", idB},
+		{"flag", idA, "starred"},
+		{"folder", idA, "Work"},
 	}
 
 	s := FromTags(tags)
@@ -254,8 +373,8 @@ func TestFromTags_ParsesTestVectorFormat(t *testing.T) {
 	if !s.IsRead(idB) {
 		t.Errorf("should have read B")
 	}
-	if !s.HasFlag(idA, "flagged") {
-		t.Errorf("should have A flagged")
+	if !s.HasFlag(idA, "starred") {
+		t.Errorf("should have A starred")
 	}
 	if s.GetFolder(idA) != "Work" {
 		t.Errorf("expected folder 'Work' for A, got %s", s.GetFolder(idA))

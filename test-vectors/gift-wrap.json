@@ -139,7 +139,7 @@
         }
       ],
       "expected_after_round_trip": {
-        "recovered_rumor.kind": 15,
+        "recovered_rumor.kind": 1400,
         "recovered_rumor.pubkey": "2c7cc62a697ea3a7826521f3fd34f0cb273693cbe5e9310f35449f43622a6748",
         "recovered_rumor.created_at": 1711843200,
         "recovered_rumor.tags": [

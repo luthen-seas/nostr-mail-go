@@ -92,7 +92,7 @@ func TestWrapUnwrap_RoundTrip(t *testing.T) {
 
 	// Verify rumor content survived the round-trip
 	if recovered.Kind != 1400 {
-		t.Errorf("recovered kind should be 15, got %d", recovered.Kind)
+		t.Errorf("recovered kind should be 1400, got %d", recovered.Kind)
 	}
 	if recovered.PubKey != alicePub {
 		t.Errorf("recovered pubkey should be Alice's")

@@ -545,8 +545,8 @@ func testMailboxState() []TestResult {
 	{
 		r := TestResult{ID: "STATE-RT", Name: "Serialization round-trip", Category: "state"}
 		s := state.New()
-		s.MarkRead("ev1", "1711840000")
-		s.MarkRead("ev2", "1711846800")
+		s.MarkRead("ev1")
+		s.MarkRead("ev2")
 		s.SetFlag("ev1", "flagged")
 		s.MoveToFolder("ev2", "Work")
 		s.MarkDeleted("ev3")
@@ -597,8 +597,7 @@ func runStateVector(id, name string, vec map[string]interface{}) TestResult {
 
 	switch action {
 	case "mark_read":
-		ts := fmt.Sprintf("%d", getInt64(input, "timestamp"))
-		s.MarkRead(eventID, ts)
+		s.MarkRead(eventID)
 		if expected, ok := vec["expected"].(map[string]interface{}); ok {
 			return verifyStateAgainstExpected(id, name, s, expected)
 		}
@@ -680,16 +679,20 @@ func parseStateFromVectorEvent(ev map[string]interface{}) *state.MailboxState {
 		}
 		switch tag[0] {
 		case "read":
-			ts := ""
+			s.MarkRead(tag[1])
+		case "flag":
 			if len(tag) >= 3 {
-				ts = tag[2]
+				for _, f := range tag[2:] {
+					s.SetFlag(tag[1], f)
+				}
 			}
-			s.MarkRead(tag[1], ts)
 		case "flagged":
+			// Legacy format compatibility
 			s.SetFlag(tag[1], "flagged")
 		case "folder":
 			if len(tag) >= 3 {
-				s.MoveToFolder(tag[2], tag[1])
+				// Spec format: ["folder", messageId, folderName]
+				s.MoveToFolder(tag[1], tag[2])
 			}
 		case "deleted":
 			s.MarkDeleted(tag[1])
