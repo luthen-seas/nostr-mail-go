@@ -24,9 +24,10 @@ type KeyPair struct {
 }
 
 // vectorDir returns the absolute path to the shared test-vectors directory.
+// Vectors are sourced from the nostr-mail-nip submodule at external/nostr-mail-nip.
 func vectorDir() string {
 	_, thisFile, _, _ := runtime.Caller(0)
-	return filepath.Join(filepath.Dir(thisFile), "..", "..", "test-vectors")
+	return filepath.Join(filepath.Dir(thisFile), "..", "..", "external", "nostr-mail-nip", "test-vectors")
 }
 
 // LoadVectors reads a test vector JSON file from the shared test-vectors directory

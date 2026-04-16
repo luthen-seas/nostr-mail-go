@@ -31,7 +31,7 @@ type TestResult struct {
 
 func vectorDir() string {
 	_, thisFile, _, _ := runtime.Caller(0)
-	return filepath.Join(filepath.Dir(thisFile), "..", "..", "..", "test-vectors")
+	return filepath.Join(filepath.Dir(thisFile), "..", "..", "..", "external", "nostr-mail-nip", "test-vectors")
 }
 
 func loadJSON(filename string) (map[string]interface{}, error) {
